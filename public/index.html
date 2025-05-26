@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Numeral Converter</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+            background-color: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        form {
+            max-width: 400px;
+            width: 100%;
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #444;
+        }
+
+        input[type="text"] {
+            padding: 0.5rem 0.75rem;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4caf50;
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+
+        button {
+            margin-top: 1rem;
+            padding: 0.5rem 1.25rem;
+            background-color: #4caf50;
+            border: none;
+            color: white;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #388e3c;
+        }
+
+        #alert {
+            max-width: 400px;
+            width: 100%;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        #alert.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #alert.error {
+            background-color: #fdecea;
+            border: 1px solid #f5c2c7;
+            color: #b02a37;
+        }
+
+        #alert.success {
+            background-color: #e6f4ea;
+            border: 1px solid #badbcc;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Converter</h1>
+
+    <form id="alienForm" novalidate>
+        <label for="alien">Enter Numeral:</label>
+        <input type="text" id="alien" name="alien" required autocomplete="off" />
+        <button type="submit">Convert</button>
+    </form>
+
+    <div id="alert"></div>
+
+    <script>
+        const form = document.getElementById('alienForm');
+        const alertBox = document.getElementById('alert');
+        let timeoutId;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            alertBox.classList.remove('error', 'success', 'show');
+            clearTimeout(timeoutId);
+
+            const alien = document.getElementById('alien').value.trim();
+
+            try {
+                const res = await fetch('/api/convert', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ alien })
+                });
+                const data = await res.json();
+
+                if (data.error) {
+                    alertBox.innerText = `Error: ${data.error}`;
+                    alertBox.classList.add('error', 'show');
+                } else if (data.result !== undefined) {
+                    alertBox.innerText = `Result: ${data.result}`;
+                    alertBox.classList.add('success', 'show');
+                } else {
+                    alertBox.innerText = 'Unknown response';
+                    alertBox.classList.add('show');
+                }
+            } catch (err) {
+                alertBox.innerText = 'Network or server error.';
+                alertBox.classList.add('error', 'show');
+            }
+
+            // ซ่อน alert หลัง 3 วินาที
+            timeoutId = setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 3000);
+        });
+    </script>
+</body>
+
+</html>
